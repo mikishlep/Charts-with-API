@@ -11,11 +11,24 @@ export function useApiData(endpoint, options = {}) {
     const lastPage = ref(1);
   
     function getParams() {
-      return {
-        dateFrom: options.dateFrom || dayjs().format('YYYY-MM-DD'),
-        ...(options.params || {}),
-        ...(options.withPagination ? { page: page.value, limit: options.limit || 100 } : {})
-      };
+        const params = {
+          dateFrom: typeof options.dateFrom === 'function' ? options.dateFrom() : options.dateFrom || dayjs().format('YYYY-MM-DD'),
+          ...(options.params || {}),
+          ...(options.withPagination ? { page: page.value, limit: options.limit || 100 } : {})
+        };
+      
+        if (endpoint === '/stocks') {
+          if ('dateTo' in params) {
+            delete params.dateTo;
+          }
+        } else {
+          const dateToValue = typeof options.dateTo === 'function' ? options.dateTo() : options.dateTo;
+          if (dateToValue) {
+            params.dateTo = dateToValue;
+          }
+        }
+      
+        return params;
     }
   
     const loadData = async () => {
